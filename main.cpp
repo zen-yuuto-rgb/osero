@@ -3,6 +3,8 @@
 #include "DxLib.h"
 #pragma warning(pop)
 
+
+
 #define BOARD_SIZE 8
 #define CELL_SIZE 80
 #define STONE_SIZE 30
