@@ -1,0 +1,83 @@
+name: Slack Notify
+
+on:
+  push:
+    branches: ["**"]
+  issues:
+    types: [opened]
+  issue_comment:
+    types: [created]
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Notify on push
+        if: github.event_name == 'push'
+        uses: slackapi/slack-github-action@v2
+        with:
+          webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
+          webhook-type: incoming-webhook
+          payload: |
+            {
+              "text": "*コミット通知*",
+              "attachments": [
+                {
+                  "color": "#36a64f",
+                  "fields": [
+                    { "title": "リポジトリ", "value": "${{ github.repository }}", "short": true },
+                    { "title": "ブランチ", "value": "${{ github.ref_name }}", "short": true },
+                    { "title": "コミットメッセージ", "value": "${{ github.event.head_commit.message }}", "short": false },
+                    { "title": "コミッター", "value": "${{ github.event.head_commit.author.name }}", "short": true }
+                  ],
+                  "actions": [
+                    { "type": "button", "text": "コミットを見る", "url": "${{ github.event.head_commit.url }}" }
+                  ]
+                }
+              ]
+            }
+
+      - name: Notify on issue opened
+        if: github.event_name == 'issues'
+        uses: slackapi/slack-github-action@v2
+        with:
+          webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
+          webhook-type: incoming-webhook
+          payload: |
+            {
+              "text": "*Issue 作成通知*",
+              "attachments": [
+                {
+                  "color": "#e8a838",
+                  "fields": [
+                    { "title": "リポジトリ", "value": "${{ github.repository }}", "short": true },
+                    { "title": "作成者", "value": "${{ github.actor }}", "short": true },
+                    { "title": "タイトル", "value": "${{ github.event.issue.title }}", "short": false },
+                    { "title": "URL", "value": "${{ github.event.issue.html_url }}", "short": false }
+                  ]
+                }
+              ]
+            }
+
+      - name: Notify on issue comment
+        if: github.event_name == 'issue_comment'
+        uses: slackapi/slack-github-action@v2
+        with:
+          webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
+          webhook-type: incoming-webhook
+          payload: |
+            {
+              "text": "*コメント通知*",
+              "attachments": [
+                {
+                  "color": "#6b4fbb",
+                  "fields": [
+                    { "title": "リポジトリ", "value": "${{ github.repository }}", "short": true },
+                    { "title": "コメントした人", "value": "${{ github.actor }}", "short": true },
+                    { "title": "Issue", "value": "${{ github.event.issue.title }}", "short": false },
+                    { "title": "コメント", "value": "${{ github.event.comment.body }}", "short": false },
+                    { "title": "URL", "value": "${{ github.event.comment.html_url }}", "short": false }
+                  ]
+                }
+              ]
+            }
