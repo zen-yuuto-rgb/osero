@@ -16,6 +16,7 @@ int board[BOARD_SIZE][BOARD_SIZE];
 
 void InitBoard(void);
 void drawBoard(void);
+void DrawStone(int x, int y, int color);
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
@@ -37,6 +38,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         ClearDrawScreen();
 
         drawBoard();
+
+        DrawStone(3, 3, BLACK);
+        DrawStone(4, 4, WHITE);
 
         ScreenFlip();
     }
@@ -68,5 +72,44 @@ void drawBoard(void)
     for (int x = 0; x <= BOARD_SIZE; x++)
     {
         DrawLine(x * CELL_SIZE, 0, x * CELL_SIZE, WINDOW_HEIGHT, GetColor(0, 0, 0));
+    }
+}
+void DrawStone(int x, int y, int color)
+{
+    // マスの中央座標を計算
+    int centerX = x * CELL_SIZE + CELL_SIZE / 2;
+    int centerY = y * CELL_SIZE + CELL_SIZE / 2;
+
+    // 黒石
+    if (color == BLACK)
+    {
+        DrawCircle(
+            centerX,
+            centerY,
+            STONE_SIZE,
+            GetColor(0, 0, 0),
+            TRUE
+        );
+    }
+
+    // 白石
+    else if (color == WHITE)
+    {
+        DrawCircle(
+            centerX,
+            centerY,
+            STONE_SIZE,
+            GetColor(255, 255, 255),
+            TRUE
+        );
+
+        // 白石が見えやすいように枠線追加
+        DrawCircle(
+            centerX,
+            centerY,
+            STONE_SIZE,
+            GetColor(0, 0, 0),
+            FALSE
+        );
     }
 }
