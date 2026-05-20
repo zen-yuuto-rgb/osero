@@ -29,7 +29,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         return -1;
     }
 
-    SetDrawScreen(DX_SCREEN_FRONT);
+    SetDrawScreen(DX_SCREEN_BACK);
 
     InitBoard();
 
@@ -39,7 +39,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
         drawBoard();
 
-        
+        ScreenFlip();
     }
 
     DxLib_End();
