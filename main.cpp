@@ -29,7 +29,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         return -1;
     }
 
-    SetDrawScreen(DX_SCREEN_BACK);
+    SetDrawScreen(DX_SCREEN_FRONT);
 
     InitBoard();
 
@@ -39,10 +39,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
         drawBoard();
 
-        DrawStone(3, 3, BLACK);
-        DrawStone(4, 4, WHITE);
-
-        ScreenFlip();
+        
     }
 
     DxLib_End();
@@ -58,6 +55,10 @@ void InitBoard(void)
             board[y][x] = EMPTY;
         }
     }
+    board[3][3] = WHITE;
+    board[3][4] = BLACK;
+    board[4][3] = BLACK;
+    board[4][4] = WHITE;
 }
 
 void drawBoard(void)
@@ -72,6 +73,14 @@ void drawBoard(void)
     for (int x = 0; x <= BOARD_SIZE; x++)
     {
         DrawLine(x * CELL_SIZE, 0, x * CELL_SIZE, WINDOW_HEIGHT, GetColor(0, 0, 0));
+    }
+
+    for (int y = 0; y < BOARD_SIZE; y++)
+    {
+        for (int x = 0; x < BOARD_SIZE; x++)
+        {
+            DrawStone(x, y, board[y][x]);
+        }
     }
 }
 void DrawStone(int x, int y, int color)
