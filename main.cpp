@@ -13,10 +13,13 @@
 #define WHITE 2
 
 int board[BOARD_SIZE][BOARD_SIZE];
+int currentTurn = BLACK;
 
 void InitBoard(void);
 void drawBoard(void);
 void DrawStone(int x, int y, int color);
+void changeTurn(void);
+void drawTurn(void);
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
@@ -37,7 +40,18 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     {
         ClearDrawScreen();
 
+        //ターン交代確認用
+        //クリックしたら白黒ターン変わる
+        if (GetMouseInput() & MOUSE_INPUT_LEFT) {
+            changeTurn();
+
+            while (GetMouseInput() & MOUSE_INPUT_LEFT) {
+                ProcessMessage();
+            }
+        }
+
         drawBoard();
+        drawTurn();
 
         ScreenFlip();
     }
@@ -120,5 +134,28 @@ void DrawStone(int x, int y, int color)
             GetColor(0, 0, 0),
             FALSE
         );
+    }
+}
+
+//ターン交代処理
+void changeTurn(void)
+{
+    if (currentTurn == BLACK)
+    {
+        currentTurn = WHITE;
+    }
+    else
+    {
+        currentTurn = BLACK;
+    }
+}
+//ターン表示
+void drawTurn(void)
+{
+    if (currentTurn == BLACK) {
+        DrawString(10, 10, L"BLACK Turn", GetColor(0, 0, 0));
+    }
+    else {
+        DrawString(10, 10, L"WHITE Turn", GetColor(255, 255, 255));
     }
 }
