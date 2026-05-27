@@ -20,6 +20,8 @@ void drawBoard(void);
 void DrawStone(int x, int y, int color);
 void changeTurn(void);
 void drawTurn(void);
+bool CanPutStone(int x, int y, int color);
+void DrawHint(void);
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
@@ -96,6 +98,7 @@ void drawBoard(void)
             DrawStone(x, y, board[y][x]);
         }
     }
+    DrawHint();
 }
 void DrawStone(int x, int y, int color)
 {
@@ -157,5 +160,104 @@ void drawTurn(void)
     }
     else {
         DrawString(10, 10, L"WHITE Turn", GetColor(255, 255, 255));
+    }
+}
+
+bool CanPutStone(int x, int y, int color)
+{
+    // 範囲外チェック
+    if (x < 0 || x >= BOARD_SIZE || y < 0 || y >= BOARD_SIZE)
+    {
+        return false;
+    }
+
+    // すでに石がある
+    if (board[y][x] != EMPTY)
+    {
+        return false;
+    }
+
+    int enemy;
+
+    // 相手の色
+    if (color == BLACK)
+    {
+        enemy = WHITE;
+    }
+    else
+    {
+        enemy = BLACK;
+    }
+
+    // 8方向
+    int dx[8] = { -1, 0, 1, -1, 1, -1, 0, 1 };
+    int dy[8] = { -1,-1,-1,  0, 0,  1, 1, 1 };
+
+    for (int dir = 0; dir < 8; dir++)
+    {
+        int nx = x + dx[dir];
+        int ny = y + dy[dir];
+
+        bool foundEnemy = false;
+
+        // 相手石が続くか確認
+        while (nx >= 0 && nx < BOARD_SIZE &&
+            ny >= 0 && ny < BOARD_SIZE)
+        {
+            // 相手石
+            if (board[ny][nx] == enemy)
+            {
+                foundEnemy = true;
+            }
+
+            // 自分の石
+            else if (board[ny][nx] == color)
+            {
+                if (foundEnemy)
+                {
+                    return true;
+                }
+                break;
+            }
+
+            // 空マス
+            else
+            {
+                break;
+            }
+
+            nx += dx[dir];
+            ny += dy[dir];
+        }
+    }
+
+    return false;
+}
+
+void DrawHint(void)
+{
+    for (int y = 0; y < BOARD_SIZE; y++)
+    {
+        for (int x = 0; x < BOARD_SIZE; x++)
+        {
+            // 置ける場所
+            if (CanPutStone(x, y, currentTurn))
+            {
+                int left = x * CELL_SIZE;
+                int top = y * CELL_SIZE;
+                int right = left + CELL_SIZE;
+                int bottom = top + CELL_SIZE;
+
+                // マスを光らせる
+                DrawBox(
+                    left,
+                    top,
+                    right,
+                    bottom,
+                    GetColor(180, 255, 180),
+                    TRUE
+                );
+            }
+        }
     }
 }
