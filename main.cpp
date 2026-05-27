@@ -20,6 +20,7 @@ void drawBoard(void);
 void DrawStone(int x, int y, int color);
 void changeTurn(void);
 void drawTurn(void);
+void drawStoneCount(void);
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
@@ -52,6 +53,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
         drawBoard();
         drawTurn();
+        drawStoneCount();
 
         ScreenFlip();
     }
@@ -158,4 +160,37 @@ void drawTurn(void)
     else {
         DrawString(10, 10, L"WHITE Turn", GetColor(255, 255, 255));
     }
+}
+
+void drawStoneCount(void)
+{
+    int blackCount = 0;
+    int whiteCount = 0;
+
+    // 盤面全探索
+    for (int y = 0; y < BOARD_SIZE; y++)
+    {
+        for (int x = 0; x < BOARD_SIZE; x++)
+        {
+            if (board[y][x] == BLACK)
+            {
+                blackCount++;
+            }
+            else if (board[y][x] == WHITE)
+            {
+                whiteCount++;
+            }
+        }
+    }
+
+    // 表示用文字
+    TCHAR text[64];
+
+    // 黒石数
+    wsprintf(text, L"BLACK : %d", blackCount);
+    DrawString(10, 40, text, GetColor(0, 0, 0));
+
+    // 白石数
+    wsprintf(text, L"WHITE : %d", whiteCount);
+    DrawString(10, 70, text, GetColor(255, 255, 255));
 }
