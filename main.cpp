@@ -25,6 +25,8 @@ void DrawHint(void);
 void drawStoneCount(void);
 void putStone(void);
 void reverseStone(int x, int y, int color);
+bool HasValidMove(int color);
+void CheckPass(void);
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
@@ -312,6 +314,7 @@ void putStone(void)
 					board[boardY][boardX] = currentTurn;
 					reverseStone(boardX, boardY, currentTurn);
 					changeTurn();
+					CheckPass();
 				}
 			}
 
@@ -388,3 +391,27 @@ void reverseStone(int x, int y, int color)
 		}
 	}
 }
+
+bool HasValidMove(int color)
+{
+	for (int y = 0; y < BOARD_SIZE; y++)
+	{
+		for (int x = 0; x < BOARD_SIZE; x++)
+		{
+			if (CanPutStone(x, y, color))
+			{
+				return true;
+			}
+		}
+	}
+	return false;
+}
+
+void CheckPass(void)
+{
+	if (!HasValidMove(currentTurn))
+	{
+		changeTurn();
+	}
+}
+
