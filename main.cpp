@@ -23,6 +23,8 @@ void drawTurn(void);
 bool CanPutStone(int x, int y, int color);
 void DrawHint(void);
 void drawStoneCount(void);
+void putStone(void);
+void reverseStone(int x, int y, int color);
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
@@ -43,19 +45,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	{
 		ClearDrawScreen();
 
-		//ターン交代確認用
-		//クリックしたら白黒ターン変わる
-		if (GetMouseInput() & MOUSE_INPUT_LEFT) {
-			changeTurn();
-
-			while (GetMouseInput() & MOUSE_INPUT_LEFT) {
-				ProcessMessage();
-			}
-		}
-
 		drawBoard();
 		drawTurn();
 		drawStoneCount();
+		putStone();
 
 		ScreenFlip();
 	}
@@ -296,3 +289,102 @@ void drawStoneCount(void)
 	DrawString(10, 70, text, GetColor(255, 255, 255));
 }
 
+//石を置く
+void putStone(void)
+{
+	static int clickFlag = 0;
+
+	if ((GetMouseInput() & MOUSE_INPUT_LEFT) != 0)
+	{
+		if (clickFlag == 0)
+		{
+			int mouseX, mouseY;
+
+			GetMousePoint(&mouseX, &mouseY);
+
+			int boardX = mouseX / CELL_SIZE;
+			int boardY = mouseY / CELL_SIZE;
+
+			if (boardX >= 0 && boardX < BOARD_SIZE &&
+				boardY >= 0 && boardY < BOARD_SIZE)
+			{
+				if (CanPutStone(boardX, boardY, currentTurn)) {
+					board[boardY][boardX] = currentTurn;
+					reverseStone(boardX, boardY, currentTurn);
+					changeTurn();
+				}
+			}
+
+			clickFlag = 1;
+		}
+	}
+	else
+	{
+		clickFlag = 0;
+	}
+}
+//石をひっくり返す
+void reverseStone(int x, int y, int color)
+{
+	int enemy;
+
+	if (color == BLACK)
+	{
+		enemy = WHITE;
+	}
+	else
+	{
+		enemy = BLACK;
+	}
+
+	int dx[] = { -1, 0, 1, -1, 1, -1, 0, 1 };
+	int dy[] = { -1,-1,-1,  0, 0,  1, 1, 1 };
+
+	for (int dir = 0; dir < 8; dir++)
+	{
+		int nx = x + dx[dir];
+		int ny = y + dy[dir];
+
+		if (nx < 0 || nx >= BOARD_SIZE ||
+			ny < 0 || ny >= BOARD_SIZE)
+		{
+			continue;
+		}
+
+		if (board[ny][nx] != enemy)
+		{
+			continue;
+		}
+
+		nx += dx[dir];
+		ny += dy[dir];
+
+		while (nx >= 0 && nx < BOARD_SIZE &&
+			ny >= 0 && ny < BOARD_SIZE)
+		{
+			if (board[ny][nx] == EMPTY)
+			{
+				break;
+			}
+
+			if (board[ny][nx] == color)
+			{
+				int rx = x + dx[dir];
+				int ry = y + dy[dir];
+
+				while (board[ry][rx] == enemy)
+				{
+					board[ry][rx] = color;
+
+					rx += dx[dir];
+					ry += dy[dir];
+				}
+
+				break;
+			}
+
+			nx += dx[dir];
+			ny += dy[dir];
+		}
+	}
+}
