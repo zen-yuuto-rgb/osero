@@ -14,6 +14,9 @@
 
 int board[BOARD_SIZE][BOARD_SIZE];
 int currentTurn = BLACK;
+int winner = 0;
+int winnerFont;
+bool gameEnd = false;
 
 void InitBoard(void);
 void drawBoard(void);
@@ -27,6 +30,8 @@ void putStone(void);
 void reverseStone(int x, int y, int color);
 bool HasValidMove(int color);
 void CheckPass(void);
+void CheckGameEnd(void);
+void DrawWinner(void);
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
@@ -38,6 +43,12 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	{
 		return -1;
 	}
+
+	winnerFont = CreateFontToHandle(
+		L"Meiryo",
+		48,
+		3
+	);
 
 	SetDrawScreen(DX_SCREEN_BACK);
 
@@ -51,6 +62,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		drawTurn();
 		drawStoneCount();
 		putStone();
+		DrawWinner();
 
 		ScreenFlip();
 	}
@@ -315,6 +327,7 @@ void putStone(void)
 					reverseStone(boardX, boardY, currentTurn);
 					changeTurn();
 					CheckPass();
+					CheckGameEnd();
 				}
 			}
 
@@ -415,3 +428,101 @@ void CheckPass(void)
 	}
 }
 
+//判定
+void CheckGameEnd(void)
+{
+	if (HasValidMove(BLACK) || HasValidMove(WHITE))
+	{
+		return;
+	}
+
+	int blackCount = 0;
+	int whiteCount = 0;
+
+	for (int y = 0; y < BOARD_SIZE; y++)
+	{
+		for (int x = 0; x < BOARD_SIZE; x++)
+		{
+			if (board[y][x] == BLACK)
+			{
+				blackCount++;
+			}
+			else if (board[y][x] == WHITE)
+			{
+				whiteCount++;
+			}
+		}
+	}
+
+	if (blackCount > whiteCount)
+	{
+		winner = BLACK;
+	}
+	else if (whiteCount > blackCount)
+	{
+		winner = WHITE;
+	}
+	else
+	{
+		winner = 3; // 引き分け
+	}
+
+	gameEnd = true;
+}
+
+//勝った方を表示
+void DrawWinner(void)
+{
+	if (!gameEnd)
+	{
+		return;
+	}
+
+	// 結果表示用パネル
+	DrawBox(
+		80,
+		240,
+		560,
+		360,
+		GetColor(255, 255, 255),
+		TRUE
+	);
+
+	DrawBox(
+		80,
+		240,
+		560,
+		360,
+		GetColor(0, 0, 0),
+		FALSE
+	);
+
+	// 勝敗表示
+	if (winner == BLACK)
+	{
+		DrawString(
+			200,
+			290,
+			L"BLACK WIN!",
+			GetColor(255, 0, 0)
+		);
+	}
+	else if (winner == WHITE)
+	{
+		DrawString(
+			200,
+			290,
+			L"WHITE WIN!",
+			GetColor(255, 0, 0)
+		);
+	}
+	else
+	{
+		DrawString(
+			250,
+			290,
+			L"DRAW!",
+			GetColor(255, 0, 0)
+		);
+	}
+}
