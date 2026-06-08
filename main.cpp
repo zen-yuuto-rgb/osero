@@ -14,6 +14,7 @@
 
 int board[BOARD_SIZE][BOARD_SIZE];
 int currentTurn = BLACK;
+bool hintVisible  = false;
 
 void InitBoard(void);
 void drawBoard(void);
@@ -27,6 +28,7 @@ void putStone(void);
 void reverseStone(int x, int y, int color);
 bool HasValidMove(int color);
 void CheckPass(void);
+void ToggleHint(void);
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
@@ -47,6 +49,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	{
 		ClearDrawScreen();
 
+		ToggleHint();
 		drawBoard();
 		drawTurn();
 		drawStoneCount();
@@ -95,7 +98,11 @@ void drawBoard(void)
 			DrawStone(x, y, board[y][x]);
 		}
 	}
-	DrawHint();
+
+	if (hintVisible)
+	{
+		DrawHint();
+	}
 }
 void DrawStone(int x, int y, int color)
 {
@@ -415,3 +422,15 @@ void CheckPass(void)
 	}
 }
 
+void ToggleHint(void)
+{
+	static int prevH = 0;
+
+	int nowH = CheckHitKey(KEY_INPUT_H);
+
+	if (nowH == 1 && prevH == 0)
+	{
+		hintVisible  = !hintVisible ;
+	}
+	prevH = nowH;
+}
