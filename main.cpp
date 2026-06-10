@@ -14,7 +14,8 @@
 
 int board[BOARD_SIZE][BOARD_SIZE];
 int currentTurn = BLACK;
-bool hintVisible  = false;
+int cpuWait = 0;
+bool isCPUThinking = false;
 
 void InitBoard(void);
 void drawBoard(void);
@@ -28,10 +29,8 @@ void putStone(void);
 void reverseStone(int x, int y, int color);
 bool HasValidMove(int color);
 void CheckPass(void);
-bool gameOver = false;
-void DrawGameOver(void);
-void CountStone(int& blackCount, int& whiteCount);
-void ToggleHint(void);
+void CPUTurn(void);
+
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
@@ -52,15 +51,22 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	{
 		ClearDrawScreen();
 
-		ToggleHint();
 		drawBoard();
 		drawTurn();
 		drawStoneCount();
-		if (gameOver)
-		{
-			DrawGameOver();
-		}
 		putStone();
+
+		if (isCPUThinking)
+		{
+			cpuWait++;
+
+			if (cpuWait > 30)
+			{
+				CPUTurn();
+				cpuWait = 0;
+				isCPUThinking = false;
+			}
+		}
 
 		ScreenFlip();
 	}
@@ -105,11 +111,7 @@ void drawBoard(void)
 			DrawStone(x, y, board[y][x]);
 		}
 	}
-
-	if (hintVisible)
-	{
-		DrawHint();
-	}
+	DrawHint();
 
 	for (int y = 0; y < BOARD_SIZE; y++)
 	{
@@ -370,6 +372,12 @@ void putStone(void)
 					reverseStone(boardX, boardY, currentTurn);
 					changeTurn();
 					CheckPass();
+
+					if (currentTurn == WHITE)
+					{
+						isCPUThinking = true;
+						cpuWait = 0;
+					}
 				}
 			}
 
@@ -467,115 +475,44 @@ void CheckPass(void)
 	if (!HasValidMove(currentTurn))
 	{
 		changeTurn();
-
-		// パス後も置けない
-		if (!HasValidMove(currentTurn))
-		{
-			gameOver = true;
-		}
 	}
 }
 
-//石の数確認
-void CountStone(int& blackCount, int& whiteCount)
+void CPUTurn(void)
 {
-	blackCount = 0;
-	whiteCount = 0;
+	// 置ける場所を探す
+	int movesX[64];
+	int movesY[64];
+	int moveCount = 0;
 
 	for (int y = 0; y < BOARD_SIZE; y++)
 	{
 		for (int x = 0; x < BOARD_SIZE; x++)
 		{
-			if (board[y][x] == BLACK)
+			if (CanPutStone(x, y, currentTurn))
 			{
-				blackCount++;
-			}
-			else if (board[y][x] == WHITE)
-			{
-				whiteCount++;
+				movesX[moveCount] = x;
+				movesY[moveCount] = y;
+				moveCount++;
 			}
 		}
 	}
+
+	// 置ける場所がない
+	if (moveCount == 0)
+	{
+		return;
+	}
+
+	int r = GetRand(moveCount - 1);
+
+	int x = movesX[r];
+	int y = movesY[r];
+
+	board[y][x] = currentTurn;
+	reverseStone(x, y, currentTurn);
+
+	changeTurn();
+	CheckPass();
 }
 
-//終了画面表示
-void DrawGameOver(void)
-{
-	int blackCount;
-	int whiteCount;
-
-	CountStone(blackCount, whiteCount);
-
-	DrawBox(
-		120,
-		220,
-		520,
-		420,
-		GetColor(220, 220, 220),
-		TRUE
-	);
-
-	DrawBox(
-		120,
-		220,
-		520,
-		420,
-		GetColor(0, 0, 0),
-		FALSE
-	);
-
-	DrawString(
-		285,
-		250,
-		L"GAME OVER",
-		GetColor(255, 0, 0)
-	);
-
-	TCHAR text[64];
-
-	wsprintf(text, L"BLACK : %d", blackCount);
-	DrawString(280, 300, text, GetColor(0, 0, 0));
-
-	wsprintf(text, L"WHITE : %d", whiteCount);
-	DrawString(280, 330, text, GetColor(0, 0, 0));
-
-	if (blackCount > whiteCount)
-	{
-		DrawString(
-			280,
-			370,
-			L"BLACK WIN!",
-			GetColor(0, 0, 0)
-		);
-	}
-	else if (whiteCount > blackCount)
-	{
-		DrawString(
-			280,
-			370,
-			L"WHITE WIN!",
-			GetColor(0, 0, 0)
-		);
-	}
-	else
-	{
-		DrawString(
-			260,
-			370,
-			L"DRAW",
-			GetColor(0, 0, 0)
-		);
-	}
-}
-void ToggleHint(void)
-{
-	static int prevH = 0;
-
-	int nowH = CheckHitKey(KEY_INPUT_H);
-
-	if (nowH == 1 && prevH == 0)
-	{
-		hintVisible  = !hintVisible ;
-	}
-	prevH = nowH;
-}
