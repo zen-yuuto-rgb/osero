@@ -103,6 +103,47 @@ void drawBoard(void)
 		}
 	}
 	DrawHint();
+
+	for (int y = 0; y < BOARD_SIZE; y++)
+	{
+		for (int x = 0; x < BOARD_SIZE; x++)
+		{
+			DrawStone(x, y, board[y][x]);
+		}
+	}
+
+	int mouseX, mouseY;
+	GetMousePoint(&mouseX, &mouseY);
+	int boardX = mouseX / CELL_SIZE;
+	int boardY = mouseY / CELL_SIZE;
+
+	if (boardX >= 0 && boardX < BOARD_SIZE &&
+		boardY >= 0 && boardY < BOARD_SIZE)
+	{
+		int centerX = boardX * CELL_SIZE + CELL_SIZE / 2;
+		int centerY = boardY * CELL_SIZE + CELL_SIZE / 2;
+
+		if (currentTurn == BLACK)
+		{
+			DrawCircle(
+				centerX,
+				centerY,
+				STONE_SIZE,
+				GetColor(0, 0, 0),
+				FALSE
+			);
+		}
+		else
+		{
+			DrawCircle(
+				centerX,
+				centerY,
+				STONE_SIZE,
+				GetColor(255, 255, 255),
+				FALSE
+			);
+		}
+	}
 }
 void DrawStone(int x, int y, int color)
 {
