@@ -27,6 +27,9 @@ void putStone(void);
 void reverseStone(int x, int y, int color);
 bool HasValidMove(int color);
 void CheckPass(void);
+bool gameOver = false;
+void DrawGameOver(void);
+void CountStone(int& blackCount, int& whiteCount);
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
@@ -50,6 +53,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		drawBoard();
 		drawTurn();
 		drawStoneCount();
+		if (gameOver)
+		{
+			DrawGameOver();
+		}
 		putStone();
 
 		ScreenFlip();
@@ -453,8 +460,103 @@ void CheckPass(void)
 	if (!HasValidMove(currentTurn))
 	{
 		changeTurn();
+
+		// パス後も置けない
+		if (!HasValidMove(currentTurn))
+		{
+			gameOver = true;
+		}
 	}
 }
 
+//石の数確認
+void CountStone(int& blackCount, int& whiteCount)
+{
+	blackCount = 0;
+	whiteCount = 0;
 
+	for (int y = 0; y < BOARD_SIZE; y++)
+	{
+		for (int x = 0; x < BOARD_SIZE; x++)
+		{
+			if (board[y][x] == BLACK)
+			{
+				blackCount++;
+			}
+			else if (board[y][x] == WHITE)
+			{
+				whiteCount++;
+			}
+		}
+	}
+}
 
+//終了画面表示
+void DrawGameOver(void)
+{
+	int blackCount;
+	int whiteCount;
+
+	CountStone(blackCount, whiteCount);
+
+	DrawBox(
+		120,
+		220,
+		520,
+		420,
+		GetColor(220, 220, 220),
+		TRUE
+	);
+
+	DrawBox(
+		120,
+		220,
+		520,
+		420,
+		GetColor(0, 0, 0),
+		FALSE
+	);
+
+	DrawString(
+		285,
+		250,
+		L"GAME OVER",
+		GetColor(255, 0, 0)
+	);
+
+	TCHAR text[64];
+
+	wsprintf(text, L"BLACK : %d", blackCount);
+	DrawString(280, 300, text, GetColor(0, 0, 0));
+
+	wsprintf(text, L"WHITE : %d", whiteCount);
+	DrawString(280, 330, text, GetColor(0, 0, 0));
+
+	if (blackCount > whiteCount)
+	{
+		DrawString(
+			280,
+			370,
+			L"BLACK WIN!",
+			GetColor(0, 0, 0)
+		);
+	}
+	else if (whiteCount > blackCount)
+	{
+		DrawString(
+			280,
+			370,
+			L"WHITE WIN!",
+			GetColor(0, 0, 0)
+		);
+	}
+	else
+	{
+		DrawString(
+			260,
+			370,
+			L"DRAW",
+			GetColor(0, 0, 0)
+		);
+	}
+}
