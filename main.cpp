@@ -17,6 +17,7 @@ int currentTurn = BLACK;
 int winner = 0;
 int winnerFont;
 bool gameEnd = false;
+bool hintVisible  = false;
 
 void InitBoard(void);
 void drawBoard(void);
@@ -32,6 +33,8 @@ bool HasValidMove(int color);
 void CheckPass(void);
 void CheckGameEnd(void);
 void DrawWinner(void);
+bool gameOver = false;
+void ToggleHint(void);
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
@@ -58,6 +61,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	{
 		ClearDrawScreen();
 
+		ToggleHint();
 		drawBoard();
 		drawTurn();
 		drawStoneCount();
@@ -107,7 +111,52 @@ void drawBoard(void)
 			DrawStone(x, y, board[y][x]);
 		}
 	}
-	DrawHint();
+
+	if (hintVisible)
+	{
+		DrawHint();
+	}
+
+	for (int y = 0; y < BOARD_SIZE; y++)
+	{
+		for (int x = 0; x < BOARD_SIZE; x++)
+		{
+			DrawStone(x, y, board[y][x]);
+		}
+	}
+
+	int mouseX, mouseY;
+	GetMousePoint(&mouseX, &mouseY);
+	int boardX = mouseX / CELL_SIZE;
+	int boardY = mouseY / CELL_SIZE;
+
+	if (boardX >= 0 && boardX < BOARD_SIZE &&
+		boardY >= 0 && boardY < BOARD_SIZE)
+	{
+		int centerX = boardX * CELL_SIZE + CELL_SIZE / 2;
+		int centerY = boardY * CELL_SIZE + CELL_SIZE / 2;
+
+		if (currentTurn == BLACK)
+		{
+			DrawCircle(
+				centerX,
+				centerY,
+				STONE_SIZE,
+				GetColor(0, 0, 0),
+				FALSE
+			);
+		}
+		else
+		{
+			DrawCircle(
+				centerX,
+				centerY,
+				STONE_SIZE,
+				GetColor(255, 255, 255),
+				FALSE
+			);
+		}
+	}
 }
 void DrawStone(int x, int y, int color)
 {
@@ -425,6 +474,12 @@ void CheckPass(void)
 	if (!HasValidMove(currentTurn))
 	{
 		changeTurn();
+
+		// パス後も置けない
+		if (!HasValidMove(currentTurn))
+		{
+			gameOver = true;
+		}
 	}
 }
 
@@ -525,4 +580,16 @@ void DrawWinner(void)
 			GetColor(255, 0, 0)
 		);
 	}
+}
+void ToggleHint(void)
+{
+	static int prevH = 0;
+
+	int nowH = CheckHitKey(KEY_INPUT_H);
+
+	if (nowH == 1 && prevH == 0)
+	{
+		hintVisible  = !hintVisible ;
+	}
+	prevH = nowH;
 }
