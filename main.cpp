@@ -14,7 +14,9 @@
 
 int board[BOARD_SIZE][BOARD_SIZE];
 int currentTurn = BLACK;
-bool hintVisible  = false;
+int winner = 0;
+int winnerFont;
+bool gameEnd = false;
 
 void InitBoard(void);
 void drawBoard(void);
@@ -28,10 +30,8 @@ void putStone(void);
 void reverseStone(int x, int y, int color);
 bool HasValidMove(int color);
 void CheckPass(void);
-bool gameOver = false;
-void DrawGameOver(void);
-void CountStone(int& blackCount, int& whiteCount);
-void ToggleHint(void);
+void CheckGameEnd(void);
+void DrawWinner(void);
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
@@ -44,6 +44,12 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		return -1;
 	}
 
+	winnerFont = CreateFontToHandle(
+		L"Meiryo",
+		48,
+		3
+	);
+
 	SetDrawScreen(DX_SCREEN_BACK);
 
 	InitBoard();
@@ -52,15 +58,11 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	{
 		ClearDrawScreen();
 
-		ToggleHint();
 		drawBoard();
 		drawTurn();
 		drawStoneCount();
-		if (gameOver)
-		{
-			DrawGameOver();
-		}
 		putStone();
+		DrawWinner();
 
 		ScreenFlip();
 	}
@@ -105,52 +107,7 @@ void drawBoard(void)
 			DrawStone(x, y, board[y][x]);
 		}
 	}
-
-	if (hintVisible)
-	{
-		DrawHint();
-	}
-
-	for (int y = 0; y < BOARD_SIZE; y++)
-	{
-		for (int x = 0; x < BOARD_SIZE; x++)
-		{
-			DrawStone(x, y, board[y][x]);
-		}
-	}
-
-	int mouseX, mouseY;
-	GetMousePoint(&mouseX, &mouseY);
-	int boardX = mouseX / CELL_SIZE;
-	int boardY = mouseY / CELL_SIZE;
-
-	if (boardX >= 0 && boardX < BOARD_SIZE &&
-		boardY >= 0 && boardY < BOARD_SIZE)
-	{
-		int centerX = boardX * CELL_SIZE + CELL_SIZE / 2;
-		int centerY = boardY * CELL_SIZE + CELL_SIZE / 2;
-
-		if (currentTurn == BLACK)
-		{
-			DrawCircle(
-				centerX,
-				centerY,
-				STONE_SIZE,
-				GetColor(0, 0, 0),
-				FALSE
-			);
-		}
-		else
-		{
-			DrawCircle(
-				centerX,
-				centerY,
-				STONE_SIZE,
-				GetColor(255, 255, 255),
-				FALSE
-			);
-		}
-	}
+	DrawHint();
 }
 void DrawStone(int x, int y, int color)
 {
@@ -370,6 +327,7 @@ void putStone(void)
 					reverseStone(boardX, boardY, currentTurn);
 					changeTurn();
 					CheckPass();
+					CheckGameEnd();
 				}
 			}
 
@@ -467,20 +425,19 @@ void CheckPass(void)
 	if (!HasValidMove(currentTurn))
 	{
 		changeTurn();
-
-		// パス後も置けない
-		if (!HasValidMove(currentTurn))
-		{
-			gameOver = true;
-		}
 	}
 }
 
-//石の数確認
-void CountStone(int& blackCount, int& whiteCount)
+//判定
+void CheckGameEnd(void)
 {
-	blackCount = 0;
-	whiteCount = 0;
+	if (HasValidMove(BLACK) || HasValidMove(WHITE))
+	{
+		return;
+	}
+
+	int blackCount = 0;
+	int whiteCount = 0;
 
 	for (int y = 0; y < BOARD_SIZE; y++)
 	{
@@ -496,86 +453,76 @@ void CountStone(int& blackCount, int& whiteCount)
 			}
 		}
 	}
+
+	if (blackCount > whiteCount)
+	{
+		winner = BLACK;
+	}
+	else if (whiteCount > blackCount)
+	{
+		winner = WHITE;
+	}
+	else
+	{
+		winner = 3; // 引き分け
+	}
+
+	gameEnd = true;
 }
 
-//終了画面表示
-void DrawGameOver(void)
+//勝った方を表示
+void DrawWinner(void)
 {
-	int blackCount;
-	int whiteCount;
+	if (!gameEnd)
+	{
+		return;
+	}
 
-	CountStone(blackCount, whiteCount);
-
+	// 結果表示用パネル
 	DrawBox(
-		120,
-		220,
-		520,
-		420,
-		GetColor(220, 220, 220),
+		80,
+		240,
+		560,
+		360,
+		GetColor(255, 255, 255),
 		TRUE
 	);
 
 	DrawBox(
-		120,
-		220,
-		520,
-		420,
+		80,
+		240,
+		560,
+		360,
 		GetColor(0, 0, 0),
 		FALSE
 	);
 
-	DrawString(
-		285,
-		250,
-		L"GAME OVER",
-		GetColor(255, 0, 0)
-	);
-
-	TCHAR text[64];
-
-	wsprintf(text, L"BLACK : %d", blackCount);
-	DrawString(280, 300, text, GetColor(0, 0, 0));
-
-	wsprintf(text, L"WHITE : %d", whiteCount);
-	DrawString(280, 330, text, GetColor(0, 0, 0));
-
-	if (blackCount > whiteCount)
+	// 勝敗表示
+	if (winner == BLACK)
 	{
 		DrawString(
-			280,
-			370,
+			200,
+			290,
 			L"BLACK WIN!",
-			GetColor(0, 0, 0)
+			GetColor(255, 0, 0)
 		);
 	}
-	else if (whiteCount > blackCount)
+	else if (winner == WHITE)
 	{
 		DrawString(
-			280,
-			370,
+			200,
+			290,
 			L"WHITE WIN!",
-			GetColor(0, 0, 0)
+			GetColor(255, 0, 0)
 		);
 	}
 	else
 	{
 		DrawString(
-			260,
-			370,
-			L"DRAW",
-			GetColor(0, 0, 0)
+			250,
+			290,
+			L"DRAW!",
+			GetColor(255, 0, 0)
 		);
 	}
-}
-void ToggleHint(void)
-{
-	static int prevH = 0;
-
-	int nowH = CheckHitKey(KEY_INPUT_H);
-
-	if (nowH == 1 && prevH == 0)
-	{
-		hintVisible  = !hintVisible ;
-	}
-	prevH = nowH;
 }
