@@ -17,7 +17,10 @@ int currentTurn = BLACK;
 int winner = 0;
 int winnerFont;
 bool gameEnd = false;
+bool gameOver = false;
 bool hintVisible  = false;
+int cpuWait = 0;
+bool isCPUThinking = false;
 
 void InitBoard(void);
 void drawBoard(void);
@@ -33,8 +36,8 @@ bool HasValidMove(int color);
 void CheckPass(void);
 void CheckGameEnd(void);
 void DrawWinner(void);
-bool gameOver = false;
 void ToggleHint(void);
+void CPUTurn(void);
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
@@ -66,6 +69,18 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		drawTurn();
 		drawStoneCount();
 		putStone();
+
+		if (isCPUThinking)
+		{
+			cpuWait++;
+
+			if (cpuWait > 30)
+			{
+				CPUTurn();
+				cpuWait = 0;
+				isCPUThinking = false;
+			}
+		}
 		DrawWinner();
 
 		ScreenFlip();
@@ -376,6 +391,12 @@ void putStone(void)
 					reverseStone(boardX, boardY, currentTurn);
 					changeTurn();
 					CheckPass();
+
+					if (currentTurn == WHITE)
+					{
+						isCPUThinking = true;
+						cpuWait = 0;
+					}
 					CheckGameEnd();
 				}
 			}
@@ -593,3 +614,42 @@ void ToggleHint(void)
 	}
 	prevH = nowH;
 }
+
+void CPUTurn(void)
+{
+	// 置ける場所を探す
+	int movesX[64];
+	int movesY[64];
+	int moveCount = 0;
+
+	for (int y = 0; y < BOARD_SIZE; y++)
+	{
+		for (int x = 0; x < BOARD_SIZE; x++)
+		{
+			if (CanPutStone(x, y, currentTurn))
+			{
+				movesX[moveCount] = x;
+				movesY[moveCount] = y;
+				moveCount++;
+			}
+		}
+	}
+
+	// 置ける場所がない
+	if (moveCount == 0)
+	{
+		return;
+	}
+
+	int r = GetRand(moveCount - 1);
+
+	int x = movesX[r];
+	int y = movesY[r];
+
+	board[y][x] = currentTurn;
+	reverseStone(x, y, currentTurn);
+
+	changeTurn();
+	CheckPass();
+}
+
